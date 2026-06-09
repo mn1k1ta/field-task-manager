@@ -220,10 +220,10 @@ export class DashboardComponent {
    * highlights that marker (and pans/auras/tooltips to it); passing null
    * reverts everything. Keeps selection-highlight state in sync too.
    */
-  protected hoverTask(id: string | null): void {
+  protected hoverTask(id: string | null, zoom = false): void {
     this.selectedId.set(id);
     if (id) {
-      this.enterHover(id);
+      this.enterHover(id, zoom);
     } else {
       this.leaveHover();
     }
@@ -350,7 +350,7 @@ export class DashboardComponent {
    * (`is-faded`), raise it to front, pan to it (keep zoom), draw a status
    * halo, and open its tooltip. Reverts the previous hover first.
    */
-  private enterHover(id: string): void {
+  private enterHover(id: string, zoom: boolean): void {
     if (!this.map) {
       return;
     }
@@ -382,18 +382,27 @@ export class DashboardComponent {
     target.setZIndexOffset(1000);
     target.openTooltip();
 
-    // Cancel a pending zoom-back and remember the overview to return to later.
-    if (this.restoreTimer) {
-      clearTimeout(this.restoreTimer);
-      this.restoreTimer = null;
-    }
-    if (!this.baseView) {
-      this.baseView = { center: this.map.getCenter(), zoom: this.map.getZoom() };
-    }
-
     const latlng = target.getLatLng();
     const task = untracked(this.tasks).find((t) => t.id === id);
-    this.zoomToTask(task, latlng);
+
+    if (zoom) {
+      // List/panel hover: remember the overview (cancelling any pending zoom-back)
+      // and fly in to the task so it's clearly visible.
+      if (this.restoreTimer) {
+        clearTimeout(this.restoreTimer);
+        this.restoreTimer = null;
+      }
+      if (!this.baseView) {
+        this.baseView = { center: this.map.getCenter(), zoom: this.map.getZoom() };
+      }
+      this.zoomToTask(task, latlng);
+    } else {
+      // Map-marker hover: highlight + tooltip only, NO pan/zoom. Draw the halo at
+      // the current zoom (area tasks already show their polygon, so skip it there).
+      if (!(task?.area && isValidArea(task.area))) {
+        this.drawAura(latlng, task?.status);
+      }
+    }
   }
 
   /** Revert all hover state: un-fade, drop the halo, close tooltips, reset z. */

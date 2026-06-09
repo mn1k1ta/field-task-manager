@@ -109,9 +109,9 @@
               (click)="openTask(task.id)"
               (keydown.enter)="openTask(task.id)"
               (keydown.space)="openTask(task.id)"
-              (mouseenter)="hoverTask(task.id)"
+              (mouseenter)="hoverTask(task.id, true)"
               (mouseleave)="hoverTask(null)"
-              (focus)="hoverTask(task.id)"
+              (focus)="hoverTask(task.id, true)"
               (blur)="hoverTask(null)"
             >
               <div class="task-row__head">
