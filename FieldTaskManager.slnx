@@ -2,4 +2,7 @@
   <Folder Name="/server/">
     <Project Path="server/FieldTaskManager.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FieldTaskManager.Tests/FieldTaskManager.Tests.csproj" />
+  </Folder>
 </Solution>

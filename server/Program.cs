@@ -108,3 +108,6 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+// Exposed so the integration-test project's WebApplicationFactory<Program> can boot the host.
+public partial class Program { }

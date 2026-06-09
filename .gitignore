@@ -9,6 +9,14 @@ obj/
 *.db-shm
 *.db-wal
 
+# ---- Uploaded attachment files (runtime data, created at upload time) ----
+server/App_Data/
+
+# ---- Playwright E2E artifacts ----
+client/test-results/
+client/playwright-report/
+client/playwright/.cache/
+
 # ---- Node / Angular ----
 node_modules/
 client/.angular/

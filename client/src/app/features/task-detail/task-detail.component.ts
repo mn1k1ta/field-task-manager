@@ -3,8 +3,8 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  afterNextRender,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -187,7 +187,21 @@ export class TaskDetailComponent {
       this.loadAttachments();
     }
 
-    afterNextRender(() => this.tryInitMap());
+    // Init the map once its container exists AND the task has loaded. The
+    // #detailMap container is behind a loading gate, so a one-shot
+    // afterNextRender (which runs before the task loads) would miss it and the
+    // map — marker + area polygon — would never render. This effect re-fires as
+    // mapEl()/task() resolve; tryInitMap is idempotent, and once the map exists
+    // we refresh the marker/area so a status change recolors them.
+    effect(() => {
+      const t = this.task();
+      this.mapEl();
+      if (!this.map) {
+        this.tryInitMap();
+      } else if (t) {
+        this.updateMarker(t);
+      }
+    });
 
     this.destroyRef.onDestroy(() => {
       this.clearArea();
