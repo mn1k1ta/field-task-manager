@@ -124,10 +124,6 @@ export class DashboardComponent {
   private hoverAura: L.Circle | null = null;
   /** Id of the currently hovered task (marker or list row), if any. */
   private hoveredId: string | null = null;
-  /** Map view (center+zoom) before hovering began, restored when hover ends. */
-  private baseView: { center: L.LatLng; zoom: number } | null = null;
-  /** Debounce so moving between markers doesn't restore-then-rezoom (flicker). */
-  private restoreTimer: ReturnType<typeof setTimeout> | null = null;
   /** Fit-to-all is auto-run only on the first non-empty render; filter
    *  reloads after that must not move the view (the user pans/zooms freely). */
   private didInitialFit = false;
@@ -176,9 +172,6 @@ export class DashboardComponent {
     afterNextRender(() => this.initMap());
 
     this.destroyRef.onDestroy(() => {
-      if (this.restoreTimer) {
-        clearTimeout(this.restoreTimer);
-      }
       this.clearAura();
       this.areaLayer?.clearLayers();
       this.areaLayer = null;
@@ -386,15 +379,9 @@ export class DashboardComponent {
     const task = untracked(this.tasks).find((t) => t.id === id);
 
     if (zoom) {
-      // List/panel hover: remember the overview (cancelling any pending zoom-back)
-      // and fly in to the task so it's clearly visible.
-      if (this.restoreTimer) {
-        clearTimeout(this.restoreTimer);
-        this.restoreTimer = null;
-      }
-      if (!this.baseView) {
-        this.baseView = { center: this.map.getCenter(), zoom: this.map.getZoom() };
-      }
+      // List/panel hover: fly in so the task is clearly visible. The map then
+      // STAYS where it zoomed — we intentionally do NOT restore the view on
+      // hover-out, leaving it on the last task you pointed at.
       this.zoomToTask(task, latlng);
     } else {
       // Map-marker hover: highlight + tooltip only, NO pan/zoom. Draw the halo at
@@ -420,20 +407,7 @@ export class DashboardComponent {
     }
     this.clearAura();
     this.hoveredId = null;
-
-    // Debounced zoom-back: when hovering truly ends (no new marker within a
-    // moment), fly back to the overview. enterHover cancels this on a new hover,
-    // so scanning across markers doesn't restore-then-rezoom (flicker).
-    if (this.restoreTimer) {
-      clearTimeout(this.restoreTimer);
-    }
-    this.restoreTimer = setTimeout(() => {
-      this.restoreTimer = null;
-      if (this.hoveredId === null && this.baseView && this.map) {
-        this.map.flyTo(this.baseView.center, this.baseView.zoom, { duration: 0.5 });
-      }
-      this.baseView = null;
-    }, 350);
+    // The map STAYS where the last hovered task zoomed it — no view restore.
   }
 
   /**
