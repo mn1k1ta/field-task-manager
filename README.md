@@ -29,6 +29,30 @@
 
 > Docker не потрібен: SQLite — файлова БД, зовнішніх сервісів немає, ручних кроків немає.
 
+## Тести
+
+Повне автоматизоване покриття — **323 тести, усі зелені** ✅
+
+| Рівень | Інструмент | К-сть | Що покрито |
+|---|---|---:|---|
+| Backend (unit + integration) | xUnit + `WebApplicationFactory` | **174** | `StatusTransitionService` (вся матриця переходів), `TaskService`, `AuthService`/`TokenService`, `CommentService`; та весь REST API через HTTP: auth/ролі/ізоляція, переходи статусів, коментарі, вкладення, полігон-`area`, фільтри/пошук |
+| Frontend (unit) | Jasmine + Karma | **131** | сервіси, i18n, пайпи, утиліти, guards, interceptor, усі компоненти |
+| E2E | Playwright (Chromium) | **18** | реєстрація/логін, створення задачі на мапі, workflow статусів, коментарі, фільтр/пошук, i18n-перемикач, малювання полігона |
+| **Разом** | | **323** | |
+
+Запуск:
+
+```bash
+# Backend — 174 (-p:SkipSpaBuild=true, щоб не перезбирати Angular)
+dotnet test -p:SkipSpaBuild=true
+
+# Frontend unit — 131
+cd client && ng test --watch=false --browsers=ChromeHeadless
+
+# E2E — 18 (застосунок має бути запущений на :5080; браузер — один раз: npx playwright install)
+cd client && npm run e2e
+```
+
 ## Передумови
 
 - **.NET SDK 10** (перевірено на 10.0.300)
