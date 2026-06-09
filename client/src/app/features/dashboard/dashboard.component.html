@@ -1,0 +1,150 @@
+<div class="dashboard">
+  <!-- MAP PANE (flex-fill, left) -->
+  <section class="map-pane" [attr.aria-label]="'dashboard.mapAria' | t">
+    <div
+      #mapContainer
+      class="map"
+      role="application"
+      [attr.aria-label]="'dashboard.mapLocationsAria' | t"
+    ></div>
+    <button type="button" class="btn btn--secondary fit-all" (click)="fitAll()">
+      {{ 'dashboard.fitAll' | t }}
+    </button>
+  </section>
+
+  <!-- TASK LIST PANE (right) -->
+  <aside class="list-pane" [attr.aria-label]="'dashboard.listAria' | t">
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <input
+          class="input search-input"
+          type="search"
+          [placeholder]="'dashboard.searchPlaceholder' | t"
+          [attr.aria-label]="'dashboard.searchAria' | t"
+          [value]="search()"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-row">
+        <label class="filter-field">
+          <span class="filter-label">{{ 'dashboard.statusFilter' | t }}</span>
+          <select
+            class="select"
+            [attr.aria-label]="'dashboard.statusFilterAria' | t"
+            [value]="statusFilter() === null ? '' : statusFilter()"
+            (change)="onStatusChange($any($event.target).value)"
+          >
+            <option value="">{{ 'common.all' | t }}</option>
+            @for (s of statusOptions; track s.status) {
+              <option [value]="s.status">{{ statusOptionLabel(s.status) }}</option>
+            }
+          </select>
+        </label>
+
+        @if (isAdmin()) {
+          <label class="filter-field">
+            <span class="filter-label">{{ 'dashboard.assigneeFilter' | t }}</span>
+            <select
+              class="select"
+              [attr.aria-label]="'dashboard.assigneeFilterAria' | t"
+              [value]="assigneeFilter() ?? ''"
+              (change)="onAssigneeChange($any($event.target).value)"
+            >
+              <option value="">{{ 'common.all' | t }}</option>
+              @for (w of workers(); track w.id) {
+                <option [value]="w.id">{{ w.displayName }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+
+      @if (isAdmin()) {
+        <a routerLink="/tasks/new" class="btn btn--primary btn--block new-task">
+          {{ 'dashboard.newTask' | t }}
+        </a>
+      }
+    </div>
+
+    <div class="list-scroll">
+      @if (loading()) {
+        <ul class="task-list" aria-hidden="true">
+          @for (n of [1, 2, 3, 4, 5]; track n) {
+            <li class="task-row skeleton">
+              <span class="skel-line skel-line--title"></span>
+              <span class="skel-line skel-line--meta"></span>
+            </li>
+          }
+        </ul>
+      } @else if (error(); as errKey) {
+        <div class="alert alert--error" role="alert">{{ errKey | t }}</div>
+      } @else if (tasks().length === 0) {
+        @if (hasActiveFilter()) {
+          <div class="empty">
+            <p>{{ 'dashboard.emptyFiltered' | t }}</p>
+            <button type="button" class="btn btn--secondary" (click)="clearFilters()">
+              {{ 'dashboard.clearFilters' | t }}
+            </button>
+          </div>
+        } @else if (isAdmin()) {
+          <div class="empty">
+            <p>{{ 'dashboard.emptyAdmin' | t }}</p>
+            <a routerLink="/tasks/new" class="btn btn--primary">{{ 'dashboard.newTask' | t }}</a>
+          </div>
+        } @else {
+          <div class="empty">
+            <p>{{ 'dashboard.emptyWorker' | t }}</p>
+          </div>
+        }
+      } @else {
+        <ul class="task-list">
+          @for (task of tasks(); track task.id) {
+            <li
+              class="task-row"
+              [class.is-selected]="selectedId() === task.id"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'dashboard.openTaskAria' | t: { title: task.title }"
+              (click)="openTask(task.id)"
+              (keydown.enter)="openTask(task.id)"
+              (keydown.space)="openTask(task.id)"
+              (mouseenter)="hoverTask(task.id)"
+              (mouseleave)="hoverTask(null)"
+              (focus)="hoverTask(task.id)"
+              (blur)="hoverTask(null)"
+            >
+              <div class="task-row__head">
+                <app-status-badge [status]="task.status" />
+                <span
+                  class="task-row__priority"
+                  [style.background-color]="rowPriorityColor(task)"
+                  [title]="'dashboard.priorityAria' | t: { priority: rowPriorityLabel(task) }"
+                  [attr.aria-label]="'dashboard.priorityAria' | t: { priority: rowPriorityLabel(task) }"
+                ></span>
+              </div>
+              <div class="task-row__title">
+                <span class="task-row__icon" aria-hidden="true">{{ rowIcon(task) }}</span>
+                <span class="task-row__title-text">{{ task.title }}</span>
+              </div>
+              <div class="task-row__meta">
+                <span
+                  class="task-row__deadline"
+                  [class.is-overdue]="isOverdue(task)"
+                >
+                  {{ 'dashboard.due' | t: { date: (task.deadline | date: 'mediumDate' : '' : lang()) ?? '' } }}
+                  @if (isOverdue(task)) {
+                    <span class="overdue-tag">{{ 'dashboard.overdue' | t }}</span>
+                  }
+                </span>
+                @if (isAdmin()) {
+                  <span class="task-row__assignee">{{ task.assigneeName }}</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </aside>
+</div>

@@ -1,0 +1,708 @@
+/* ============================================================================
+   Field Task Manager — global stylesheet
+   Visual language: Diia (Дія) design system — e-Ukraine type, clean white
+   surfaces, near-black text, black primary actions, soft pastel status tints,
+   generous radii and flat, gentle shadows. Dual theme (light default + dark).
+   Plain CSS variables + flex/grid; no UI framework.
+   ============================================================================ */
+
+@import 'leaflet/dist/leaflet.css';
+
+/* ----------------------------------------------------------------------------
+   e-Ukraine — the Diia type family (served from jsDelivr; system fallback).
+   e-Ukraine = body, e-UkraineHead = display/headings.
+   ---------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'e-Ukraine';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-Ukraine-Light.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'e-Ukraine';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-Ukraine-Regular.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'e-Ukraine';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-Ukraine-Medium.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'e-Ukraine';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-Ukraine-Bold.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'e-UkraineHead';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-UkraineHead-Regular.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'e-UkraineHead';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-UkraineHead-Medium.woff2')
+    format('woff2');
+}
+@font-face {
+  font-family: 'e-UkraineHead';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/haos616/e-Ukraine@master/static/fonts/e-UkraineHead-Bold.woff2')
+    format('woff2');
+}
+
+/* ----------------------------------------------------------------------------
+   LIGHT THEME (default) — Diia
+   ---------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Primary action = Diia black */
+  --color-action: #000000;
+  --color-action-hover: #232323;
+  --color-action-press: #000000;
+  --color-on-action: #ffffff;
+
+  /* Accent = Diia blue (links, focus, selection, highlights) */
+  --color-brand: #2b6cf6;
+  --color-brand-hover: #1c5be0;
+  --color-brand-press: #174fc7;
+  --color-brand-subtle: #eaf1ff;
+  --color-brand-rgb: 43, 108, 246;
+
+  /* Neutrals / surfaces */
+  --color-bg: #f3f4f6;
+  --color-bg-grad: none;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f5f8;
+  --color-surface-3: #e9edf2;
+  --color-border: #e6e9ef;
+  --color-border-strong: #d3d8e1;
+  --color-overlay: rgba(13, 16, 23, 0.45);
+
+  /* Text */
+  --color-text: #16181d;
+  --color-text-muted: #5b6472;
+  --color-text-faint: #98a1b0;
+  --color-text-on-brand: #ffffff;
+
+  /* Status palette (markers + badges + legend) */
+  --status-created: #98a1b0;
+  --status-inprogress: #2b6cf6;
+  --status-done: #f5a623;
+  --status-verified: #19a974;
+
+  --status-created-bg: #eef1f5;
+  --status-inprogress-bg: #eaf1ff;
+  --status-done-bg: #fdf2dd;
+  --status-verified-bg: #e3f6ee;
+
+  --status-created-text: #5b6472;
+  --status-inprogress-text: #1c5be0;
+  --status-done-text: #a96c00;
+  --status-verified-text: #137a54;
+
+  /* Feedback */
+  --color-success: #19a974;
+  --color-warning: #f5a623;
+  --color-danger: #e5484d;
+  --color-danger-bg: #fdeaea;
+
+  /* Role badges */
+  --role-admin: #0e7c70;
+  --role-worker: #2b6cf6;
+
+  /* Typography */
+  --font-sans: 'e-Ukraine', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-head: 'e-UkraineHead', 'e-Ukraine', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Consolas, 'Liberation Mono', monospace;
+
+  /* Spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* Radius — Diia is generously rounded */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Elevation — flat, soft */
+  --shadow-xs: 0 1px 2px rgba(16, 19, 26, 0.05);
+  --shadow-sm: 0 2px 8px rgba(16, 19, 26, 0.06);
+  --shadow-md: 0 10px 28px rgba(16, 19, 26, 0.08);
+  --shadow-lg: 0 20px 48px rgba(16, 19, 26, 0.12);
+  --shadow-drawer: -16px 0 44px rgba(16, 19, 26, 0.12);
+  --shadow-brand: none;
+
+  --focus-ring: 0 0 0 3px rgba(var(--color-brand-rgb), 0.3);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 0.14s;
+  --dur: 0.24s;
+  --dur-slow: 0.4s;
+}
+
+/* ----------------------------------------------------------------------------
+   DARK THEME — Diia dark (action inverts to white)
+   ---------------------------------------------------------------------------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-action: #ffffff;
+  --color-action-hover: #e7eaf0;
+  --color-action-press: #d7dce4;
+  --color-on-action: #0c0e12;
+
+  --color-brand: #5b8cff;
+  --color-brand-hover: #719cff;
+  --color-brand-press: #4f80f5;
+  --color-brand-subtle: #18243f;
+  --color-brand-rgb: 91, 140, 255;
+
+  --color-bg: #0b0d12;
+  --color-bg-grad: none;
+  --color-surface: #14171f;
+  --color-surface-2: #1b1f29;
+  --color-surface-3: #242a36;
+  --color-border: #29303c;
+  --color-border-strong: #3a4250;
+  --color-overlay: rgba(2, 4, 8, 0.6);
+
+  --color-text: #eef1f7;
+  --color-text-muted: #a0a8b6;
+  --color-text-faint: #6c7682;
+  --color-text-on-brand: #ffffff;
+
+  --status-created: #7d8696;
+  --status-inprogress: #5b8cff;
+  --status-done: #f6b545;
+  --status-verified: #2fc086;
+
+  --status-created-bg: #1c2230;
+  --status-inprogress-bg: #18243f;
+  --status-done-bg: #2c2415;
+  --status-verified-bg: #12281f;
+
+  --status-created-text: #aab3c1;
+  --status-inprogress-text: #8fb0ff;
+  --status-done-text: #f6c277;
+  --status-verified-text: #58d39e;
+
+  --color-success: #2fc086;
+  --color-warning: #f6b545;
+  --color-danger: #ff6b6f;
+  --color-danger-bg: #2c1719;
+
+  --role-admin: #2dd4bf;
+  --role-worker: #5b8cff;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 22px 56px rgba(0, 0, 0, 0.62);
+  --shadow-drawer: -16px 0 52px rgba(0, 0, 0, 0.6);
+  --shadow-brand: none;
+
+  --focus-ring: 0 0 0 3px rgba(var(--color-brand-rgb), 0.45);
+}
+
+/* ---- Reset / base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color var(--dur) ease,
+    color var(--dur) ease;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-head);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+a {
+  color: var(--color-brand);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: rgba(var(--color-brand-rgb), 0.22);
+}
+
+/* Slim, themed scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-faint);
+  background-clip: content-box;
+}
+
+/* ---- Layout container ---- */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-5);
+}
+
+/* ============================================================================
+   Buttons — Diia: flat, rounded, black primary
+   ============================================================================ */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  transition:
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-surface-3);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn:disabled {
+  background: var(--color-surface-2);
+  color: var(--color-text-faint);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.btn--primary {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-action-hover);
+}
+.btn--primary:active:not(:disabled) {
+  background: var(--color-action-press);
+}
+
+.btn--positive {
+  background: var(--status-verified);
+  color: #fff;
+}
+.btn--positive:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-2);
+  border-color: var(--color-text-faint);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+.btn--ghost.is-open {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.btn--danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn--danger-text {
+  background: transparent;
+  color: var(--color-danger);
+  padding: 0;
+  height: auto;
+}
+.btn--danger-text:hover:not(:disabled) {
+  text-decoration: underline;
+  background: transparent;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* ============================================================================
+   Forms
+   ============================================================================ */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.form-label .req {
+  color: var(--color-danger);
+  margin-left: 2px;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    background var(--dur-fast) ease;
+}
+
+.textarea {
+  min-height: 88px;
+  padding: var(--space-3) var(--space-4);
+  resize: vertical;
+  line-height: 22px;
+}
+
+.select {
+  appearance: auto;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--color-text-faint);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: var(--focus-ring);
+}
+
+.input.is-invalid,
+.textarea.is-invalid,
+.select.is-invalid {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ============================================================================
+   Cards & surfaces
+   ============================================================================ */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* ============================================================================
+   Status badge — color dot + label + icon
+   ============================================================================ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex: 0 0 auto;
+}
+
+/* ============================================================================
+   Feedback: toast / inline error banner
+   ============================================================================ */
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.alert--error {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, transparent);
+}
+
+/* ============================================================================
+   Leaflet status markers — circular pin (status color) with centered glyph.
+   Markup (leaflet-marker.util): wrapper .leaflet-status-marker.pin-shape--marker
+   contains .pin.pin--marker[style="--pin:<color>"] > .pin__glyph
+   ============================================================================ */
+.leaflet-status-marker {
+  background: transparent;
+  border: none;
+}
+
+.pin--marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pin, #888);
+  border: 2.5px solid #ffffff;
+  box-shadow:
+    0 2px 6px rgba(16, 19, 26, 0.38),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  transition:
+    transform var(--dur) var(--ease-spring),
+    box-shadow var(--dur) ease;
+  animation: pin-drop 0.4s var(--ease-spring) both;
+}
+
+:root[data-theme='dark'] .pin--marker {
+  border-color: #14171f;
+}
+
+.pin__glyph {
+  font-size: 15px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+
+.leaflet-status-marker:hover .pin--marker {
+  transform: scale(1.12);
+}
+
+.leaflet-status-marker.is-selected .pin--marker {
+  transform: scale(1.3);
+  box-shadow:
+    0 6px 16px rgba(16, 19, 26, 0.48),
+    0 0 0 6px color-mix(in srgb, var(--pin, #2b6cf6) 28%, transparent);
+  z-index: 1000;
+}
+
+.leaflet-status-marker.is-draggable .pin--marker {
+  animation:
+    pin-drop 0.4s var(--ease-spring) both,
+    pin-pulse 1.8s ease-out 0.4s infinite;
+}
+
+@keyframes pin-drop {
+  0% {
+    transform: scale(0.2) translateY(-20px);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pin-pulse {
+  0% {
+    box-shadow:
+      0 2px 6px rgba(16, 19, 26, 0.38),
+      0 0 0 0 color-mix(in srgb, var(--pin, #2b6cf6) 52%, transparent);
+  }
+  70% {
+    box-shadow:
+      0 2px 6px rgba(16, 19, 26, 0.38),
+      0 0 0 14px color-mix(in srgb, var(--pin, #2b6cf6) 0%, transparent);
+  }
+  100% {
+    box-shadow:
+      0 2px 6px rgba(16, 19, 26, 0.38),
+      0 0 0 0 color-mix(in srgb, var(--pin, #2b6cf6) 0%, transparent);
+  }
+}
+
+/* Tone Leaflet's default UI to match the theme */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-surface-2);
+}
+.leaflet-bar,
+.leaflet-bar a,
+.leaflet-control-zoom a {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+.leaflet-bar a:hover {
+  background: var(--color-surface-2);
+}
+.leaflet-bar a:first-child {
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+.leaflet-bar a:last-child {
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
+}
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent) !important;
+  color: var(--color-text-faint) !important;
+}
+.leaflet-control-attribution a {
+  color: var(--color-text-muted) !important;
+}
+
+/* Dark-mode map tiles: invert + tune so the map reads as a dark basemap. */
+:root[data-theme='dark'] .leaflet-tile-pane {
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.85);
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .pin--marker,
+  .leaflet-status-marker.is-draggable .pin--marker {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

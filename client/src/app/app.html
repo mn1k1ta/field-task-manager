@@ -1,0 +1,95 @@
+@if (isAuthenticated()) {
+  <header class="app-bar">
+    <div class="app-bar__brand">
+      <span class="app-bar__glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <path
+            d="M12 2c-3.9 0-7 3.05-7 6.82C5 13.8 12 22 12 22s7-8.2 7-13.18C19 5.05 15.9 2 12 2Z"
+            fill="currentColor"
+          />
+          <circle cx="12" cy="8.8" r="2.6" fill="#fff" />
+        </svg>
+      </span>
+      <span class="app-bar__name">{{ 'common.appName' | t }}</span>
+    </div>
+
+    <div class="app-bar__right">
+      <div class="lang-switch" role="group" [attr.aria-label]="'nav.language' | t">
+        <button
+          type="button"
+          class="lang-switch__btn"
+          [class.is-active]="lang() === 'uk'"
+          [attr.aria-pressed]="lang() === 'uk'"
+          [attr.aria-label]="'nav.switchToUk' | t"
+          [title]="'nav.langUkFull' | t"
+          (click)="setLang('uk')"
+        >
+          {{ 'nav.langUk' | t }}
+        </button>
+        <button
+          type="button"
+          class="lang-switch__btn"
+          [class.is-active]="lang() === 'en'"
+          [attr.aria-pressed]="lang() === 'en'"
+          [attr.aria-label]="'nav.switchToEn' | t"
+          [title]="'nav.langEnFull' | t"
+          (click)="setLang('en')"
+        >
+          {{ 'nav.langEn' | t }}
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn theme-toggle"
+        (click)="toggleTheme()"
+        [attr.aria-label]="(theme() === 'dark' ? 'nav.switchToLight' : 'nav.switchToDark') | t"
+        [attr.aria-pressed]="theme() === 'dark'"
+        [title]="'nav.toggleTheme' | t"
+      >
+        @if (theme() === 'dark') {
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+            <g stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path
+                d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"
+              />
+            </g>
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+            <path d="M20 14.2A8 8 0 1 1 9.8 4a6.4 6.4 0 0 0 10.2 10.2Z" fill="currentColor" />
+          </svg>
+        }
+      </button>
+
+      @if (currentUser(); as user) {
+        <span class="app-bar__user">
+          <span class="app-bar__avatar" aria-hidden="true">{{ user.displayName.charAt(0) }}</span>
+          <span class="app-bar__username">{{ user.displayName }}</span>
+          @if (user.role === Role.Admin) {
+            <span
+              class="role-badge role-badge--admin"
+              [attr.aria-label]="'nav.roleAdminAria' | t"
+              >{{ 'nav.roleAdmin' | t }}</span
+            >
+          } @else {
+            <span
+              class="role-badge role-badge--worker"
+              [attr.aria-label]="'nav.roleWorkerAria' | t"
+              >{{ 'nav.roleWorker' | t }}</span
+            >
+          }
+        </span>
+      }
+
+      <button type="button" class="btn btn--secondary" (click)="logout()">
+        {{ 'nav.logout' | t }}
+      </button>
+    </div>
+  </header>
+}
+
+<main class="app-main" [class.app-main--auth]="!isAuthenticated()">
+  <router-outlet />
+</main>

@@ -1,0 +1,198 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100vh;
+}
+
+.app-bar {
+  height: 60px;
+  flex: 0 0 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-5);
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  z-index: 30;
+}
+
+.app-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-bar__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--color-on-action);
+  background: var(--color-action);
+}
+.app-bar__glyph svg path {
+  fill: currentColor;
+}
+
+.app-bar__name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.app-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Icon-only round button (theme toggle) */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
+}
+.icon-btn:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+.icon-btn:active {
+  transform: scale(0.92);
+}
+.theme-toggle svg {
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+.theme-toggle:hover svg {
+  transform: rotate(35deg);
+}
+
+/* Compact UA / EN language switch */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.lang-switch__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+.lang-switch__btn:hover {
+  color: var(--color-text);
+}
+.lang-switch__btn.is-active {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+.app-bar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-bar__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-subtle);
+  color: var(--color-brand);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.app-bar__username {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.role-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: #fff;
+}
+
+.role-badge--admin {
+  background: var(--role-admin);
+}
+
+.role-badge--worker {
+  background: var(--role-worker);
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Auth screens (login/register) handle their own full-bleed layout. */
+.app-main--auth {
+  align-items: stretch;
+  justify-content: stretch;
+  background: transparent;
+  padding: 0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .app-bar {
+    padding: 0 var(--space-3);
+    gap: var(--space-2);
+  }
+  .app-bar__name {
+    display: none;
+  }
+  .app-bar__username {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle:hover svg {
+    transform: none;
+  }
+}

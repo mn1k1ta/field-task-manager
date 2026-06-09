@@ -1,0 +1,333 @@
+<div class="detail">
+  <header class="detail__bar">
+    <button
+      type="button"
+      class="btn btn--ghost back-btn"
+      (click)="back()"
+      [attr.aria-label]="'detail.backAria' | t"
+    >
+      {{ 'common.back' | t }}
+    </button>
+    @if (task(); as t) {
+      @if (isAdmin()) {
+        <div class="bar-actions">
+          <a [routerLink]="['/tasks', t.id, 'edit']" class="btn btn--secondary">
+            {{ 'common.edit' | t }}
+          </a>
+        </div>
+      }
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="panel">
+      <span class="skel-line skel-line--title"></span>
+      <span class="skel-line"></span>
+      <span class="skel-line skel-line--short"></span>
+    </div>
+  } @else if (error(); as errMsg) {
+    <div class="panel">
+      <div class="alert alert--error" role="alert">{{ errMsg }}</div>
+      <button type="button" class="btn btn--secondary" (click)="back()">
+        {{ 'common.backToDashboard' | t }}
+      </button>
+    </div>
+  } @else if (task(); as t) {
+    <div class="detail__grid">
+      <!-- LEFT: header, description, attachments, map -->
+      <section class="panel detail__main">
+        <div class="head-row">
+          <span class="head-icon" aria-hidden="true">{{ headerIcon() }}</span>
+          <h1 class="detail__title">{{ t.title }}</h1>
+        </div>
+
+        <div class="head-meta">
+          <app-status-badge [status]="t.status" />
+          <app-priority-chip [priority]="t.priority" />
+          @for (label of t.labels; track label) {
+            <span class="label-pill">{{ label }}</span>
+          }
+        </div>
+
+        <!-- Description -->
+        <section class="block">
+          <h2 class="block-title">{{ 'task.description' | t }}</h2>
+          @if (t.description && t.description.trim()) {
+            <div class="prose" [innerHTML]="t.description | markdown"></div>
+          } @else {
+            <p class="muted-note">{{ 'detail.noDescription' | t }}</p>
+          }
+        </section>
+
+        <!-- Attachments -->
+        <section class="block">
+          <h2 class="block-title">
+            {{ 'detail.attachmentsCount' | t: { count: attachments().length } }}
+          </h2>
+
+          @if (attachmentError(); as attMsg) {
+            <div class="alert alert--error" role="alert">{{ attMsg }}</div>
+          }
+
+          @if (imageAttachments().length) {
+            <div class="attach-grid">
+              @for (att of imageAttachments(); track att.id) {
+                <figure class="thumb">
+                  <button
+                    type="button"
+                    class="thumb__open"
+                    [attr.aria-label]="'detail.openImageAria' | t: { name: att.fileName }"
+                    (click)="openImage(att)"
+                  >
+                    <app-auth-image class="thumb__img" [src]="att.url" [alt]="att.fileName" />
+                  </button>
+                  @if (canDeleteAttachment(att)) {
+                    <button
+                      type="button"
+                      class="thumb__remove"
+                      [title]="'common.delete' | t"
+                      [attr.aria-label]="'detail.deleteAttachmentAria' | t: { name: att.fileName }"
+                      (click)="deleteAttachment(att)"
+                    >
+                      ✕
+                    </button>
+                  }
+                </figure>
+              }
+            </div>
+          }
+
+          @if (fileAttachments().length) {
+            <ul class="file-chips">
+              @for (att of fileAttachments(); track att.id) {
+                <li class="file-chip">
+                  <span class="file-chip__icon" aria-hidden="true">📄</span>
+                  <button
+                    type="button"
+                    class="file-chip__name"
+                    [title]="'detail.downloadAria' | t: { name: att.fileName }"
+                    (click)="download(att)"
+                  >
+                    {{ att.fileName }}
+                  </button>
+                  <span class="file-chip__size">{{ formatSize(att.sizeBytes) }}</span>
+                  <button
+                    type="button"
+                    class="file-chip__action"
+                    [attr.aria-label]="'detail.downloadAria' | t: { name: att.fileName }"
+                    (click)="download(att)"
+                  >
+                    ⬇
+                  </button>
+                  @if (canDeleteAttachment(att)) {
+                    <button
+                      type="button"
+                      class="file-chip__x"
+                      [attr.aria-label]="'detail.deleteAttachmentAria' | t: { name: att.fileName }"
+                      (click)="deleteAttachment(att)"
+                    >
+                      ✕
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (!attachments().length && !canUpload()) {
+            <p class="muted-note">{{ 'detail.noAttachments' | t }}</p>
+          }
+
+          @if (canUpload()) {
+            <div
+              class="dropzone"
+              [class.is-dragging]="dragging()"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+            >
+              <p class="dropzone__text">
+                {{ 'form.dropFilesPrefix' | t }}
+                <label class="dropzone__pick">
+                  {{ 'form.browse' | t }}
+                  <input type="file" multiple hidden (change)="onPick($event)" />
+                </label>
+              </p>
+              @if (uploading()) {
+                <p class="dropzone__hint">{{ 'form.uploading' | t }}</p>
+              } @else {
+                <p class="dropzone__hint">{{ 'form.maxFileSize' | t }}</p>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Map -->
+        <section class="block">
+          <h2 class="block-title">{{ 'task.location' | t }}</h2>
+          <dl class="meta-grid">
+            <div class="meta-cell">
+              <dt>{{ 'task.assignee' | t }}</dt>
+              <dd>{{ t.assigneeName }}</dd>
+            </div>
+            <div class="meta-cell">
+              <dt>{{ 'task.deadline' | t }}</dt>
+              <dd>{{ t.deadline | date: 'medium' : '' : lang() }}</dd>
+            </div>
+            <div class="meta-cell">
+              <dt>{{ 'task.coordinates' | t }}</dt>
+              <dd class="mono">
+                {{ t.latitude | number: '1.4-4' }}, {{ t.longitude | number: '1.4-4' }}
+              </dd>
+            </div>
+          </dl>
+          <div
+            #detailMap
+            class="detail__map"
+            role="img"
+            [attr.aria-label]="'detail.taskLocationMapAria' | t"
+          ></div>
+        </section>
+      </section>
+
+      <!-- RIGHT: status actions + comments -->
+      <aside class="panel detail__side">
+        <h2 class="section-title">{{ 'detail.statusActions' | t }}</h2>
+
+        @if (actionError(); as actMsg) {
+          <div class="alert alert--error" role="alert">{{ actMsg }}</div>
+        }
+
+        <div class="actions">
+          @if (canStart()) {
+            <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="start()">
+              {{ (busy() ? 'common.working' : 'detail.startWork') | t }}
+            </button>
+          }
+          @if (canMarkDone()) {
+            <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="markDone()">
+              {{ (busy() ? 'common.working' : 'detail.markDone') | t }}
+            </button>
+          }
+          @if (canVerify()) {
+            <button type="button" class="btn btn--positive" [disabled]="busy()" (click)="verify()">
+              {{ (busy() ? 'common.working' : 'detail.verify') | t }}
+            </button>
+          }
+          @if (canReopen()) {
+            <button type="button" class="btn btn--secondary" [disabled]="busy()" (click)="reopen()">
+              {{ (busy() ? 'common.working' : 'detail.reopen') | t }}
+            </button>
+          }
+          @if (statusNote(); as note) {
+            <p class="status-note">{{ note }}</p>
+          }
+        </div>
+
+        @if (isAdmin()) {
+          <div class="danger-zone">
+            @if (!confirmingDelete()) {
+              <button type="button" class="btn btn--danger-text" (click)="askDelete()">
+                {{ 'detail.deleteTask' | t }}
+              </button>
+            } @else {
+              <div class="confirm">
+                <p class="confirm__msg">
+                  {{ 'detail.deleteConfirm' | t }}
+                </p>
+                <div class="confirm__actions">
+                  <button
+                    type="button"
+                    class="btn btn--secondary"
+                    [disabled]="busy()"
+                    (click)="cancelDelete()"
+                  >
+                    {{ 'common.cancel' | t }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--danger"
+                    [disabled]="busy()"
+                    (click)="confirmDelete()"
+                  >
+                    {{ (busy() ? 'detail.deleting' : 'common.delete') | t }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <h2 class="section-title">{{ 'comment.heading' | t: { count: comments().length } }}</h2>
+
+        <ul class="comment-list" [attr.aria-label]="'comment.threadAria' | t">
+          @for (c of comments(); track c.id) {
+            <li class="comment">
+              <div class="comment__head">
+                <span class="comment__author">{{ c.authorName }}</span>
+                <span class="comment__time">{{ c.createdAtUtc | date: 'short' : '' : lang() }}</span>
+              </div>
+              <div class="comment__body">{{ c.body }}</div>
+            </li>
+          } @empty {
+            <li class="comment-empty">{{ 'comment.empty' | t }}</li>
+          }
+        </ul>
+
+        <div class="composer">
+          <textarea
+            class="textarea"
+            rows="3"
+            [placeholder]="'comment.placeholder' | t"
+            [attr.aria-label]="'comment.addAria' | t"
+            [formControl]="commentCtrl"
+            [class.is-invalid]="commentInvalid"
+            (keydown.control.enter)="postComment()"
+            (keydown.meta.enter)="postComment()"
+          ></textarea>
+          <div class="composer__foot">
+            @if (commentInvalid) {
+              <span class="field-error">{{ 'comment.empty.error' | t }}</span>
+            } @else {
+              <span></span>
+            }
+            <button
+              type="button"
+              class="btn btn--primary"
+              [disabled]="posting() || commentCtrl.value.trim() === ''"
+              (click)="postComment()"
+            >
+              {{ (posting() ? 'comment.posting' : 'comment.post') | t }}
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
+
+  <!-- Image lightbox -->
+  @if (lightboxUrl(); as url) {
+    <div
+      class="lightbox"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="lightboxAlt()"
+      (click)="closeLightbox()"
+    >
+      <button
+        type="button"
+        class="lightbox__close"
+        [attr.aria-label]="'common.close' | t"
+        (click)="closeLightbox()"
+      >
+        ✕
+      </button>
+      <img
+        class="lightbox__img"
+        [src]="url"
+        [alt]="lightboxAlt()"
+        (click)="$event.stopPropagation()"
+      />
+    </div>
+  }
+</div>

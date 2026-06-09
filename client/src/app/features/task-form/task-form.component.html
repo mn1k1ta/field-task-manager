@@ -1,0 +1,504 @@
+<div class="form-screen">
+  <header class="form-topbar">
+    <div class="form-topbar__lead">
+      <a
+        routerLink="/dashboard"
+        class="btn btn--ghost back-btn"
+        [attr.aria-label]="'form.backAria' | t"
+      >
+        {{ 'common.back' | t }}
+      </a>
+      <h1 class="form-title">{{ (isEdit() ? 'form.editTitle' : 'form.createTitle') | t }}</h1>
+    </div>
+    <div class="form-topbar__actions">
+      <button type="button" class="btn btn--secondary" (click)="cancel()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button
+        type="submit"
+        form="task-form"
+        class="btn btn--primary"
+        [disabled]="submitting() || form.invalid || !hasLocation()"
+      >
+        {{ (submitting() ? 'common.saving' : isEdit() ? 'form.saveChanges' : 'form.create') | t }}
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="form-loading">
+      <span class="skel-line skel-line--title"></span>
+      <span class="skel-line"></span>
+      <span class="skel-line skel-line--short"></span>
+    </div>
+  } @else {
+    <form id="task-form" class="form-grid" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (error(); as errMsg) {
+        <div class="alert alert--error form-grid__full" role="alert">{{ errMsg }}</div>
+      }
+
+      <!-- ============ LEFT: LOCATION MAP ============ -->
+      <section
+        class="map-panel"
+        [class.map--placing]="mapMode() === 'point'"
+        [class.map--drawing]="mapMode() === 'area'"
+        [attr.aria-label]="'form.locationAria' | t"
+      >
+        <div class="map-toolbar" role="toolbar" [attr.aria-label]="'form.mapToolsAria' | t">
+          <div class="map-modes" role="group" [attr.aria-label]="'form.mapModeAria' | t">
+            <button
+              type="button"
+              class="map-mode"
+              [class.is-active]="mapMode() === 'point'"
+              [attr.aria-pressed]="mapMode() === 'point'"
+              (click)="setMapMode('point')"
+            >
+              {{ 'form.modePoint' | t }}
+            </button>
+            <button
+              type="button"
+              class="map-mode"
+              [class.is-active]="mapMode() === 'area'"
+              [attr.aria-pressed]="mapMode() === 'area'"
+              (click)="setMapMode('area')"
+            >
+              {{ 'form.modeArea' | t }}
+            </button>
+          </div>
+
+          <div class="map-toolbar__spacer"></div>
+
+          @if (mapMode() === 'area') {
+            <div class="map-area-tools" role="group" [attr.aria-label]="'form.areaToolsAria' | t">
+              <button
+                type="button"
+                class="map-tool"
+                [disabled]="areaPoints().length === 0"
+                (click)="undoVertex()"
+              >
+                {{ 'form.undo' | t }}
+              </button>
+              <button
+                type="button"
+                class="map-tool"
+                [disabled]="areaPoints().length === 0"
+                (click)="clearArea()"
+              >
+                {{ 'form.clearArea' | t }}
+              </button>
+              <button type="button" class="map-tool map-tool--primary" (click)="finishArea()">
+                {{ 'form.areaDone' | t }}
+              </button>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="map-tool map-tool--locate"
+              [disabled]="locating()"
+              (click)="useCurrentLocation()"
+            >
+              @if (locating()) {
+                <span class="spinner" aria-hidden="true"></span>
+                {{ 'form.locating' | t }}
+              } @else {
+                {{ 'form.currentLocation' | t }}
+              }
+            </button>
+          }
+        </div>
+
+        <div
+          #pickMap
+          class="map-canvas"
+          role="application"
+          [attr.aria-label]="(mapMode() === 'area' ? 'form.mapAreaPointsAria' : 'form.mapPointAria') | t"
+        ></div>
+
+        <div class="map-footer">
+          @if (geoError(); as geoMsg) {
+            <span class="map-msg map-msg--error" role="alert">{{ geoMsg }}</span>
+          } @else if (mapMode() === 'area') {
+            @if (hasArea()) {
+              <span class="map-msg map-msg--ok">
+                {{ 'form.areaOk' | t: { count: areaPoints().length } }}
+              </span>
+            } @else {
+              <span class="map-msg">
+                {{ 'form.areaHint' | t: { count: areaPoints().length } }}
+              </span>
+            }
+          } @else if (hasLocation()) {
+            <span class="map-msg map-msg--ok">
+              {{ 'form.locationSet' | t }}
+              <span class="mono">{{ lat()! | number: '1.4-4' }}, {{ lng()! | number: '1.4-4' }}</span>
+            </span>
+          } @else {
+            <span class="map-msg">
+              {{ 'form.locationHint' | t }}
+            </span>
+          }
+        </div>
+      </section>
+
+      <!-- ============ RIGHT: FIELDS ============ -->
+      <aside class="form-fields">
+        <!-- Title -->
+        <div class="form-field">
+          <label class="form-label" for="task-title">
+            {{ 'task.title' | t }}<span class="req" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="task-title"
+            class="input title-input"
+            type="text"
+            [placeholder]="'form.titlePlaceholder' | t"
+            formControlName="title"
+            [class.is-invalid]="invalid('title')"
+          />
+          @if (invalid('title')) {
+            <span class="field-error">{{ 'form.titleRequired' | t }}</span>
+          }
+        </div>
+
+        <!-- Description: markdown editor -->
+        <div class="form-field">
+          <div class="editor-head">
+            <span class="form-label">{{ 'task.description' | t }}</span>
+            <div class="editor-tabs" role="tablist" [attr.aria-label]="'form.descriptionModeAria' | t">
+              <button
+                type="button"
+                class="editor-tab"
+                role="tab"
+                [class.is-active]="!previewMode()"
+                [attr.aria-selected]="!previewMode()"
+                (click)="setPreview(false)"
+              >
+                {{ 'form.write' | t }}
+              </button>
+              <button
+                type="button"
+                class="editor-tab"
+                role="tab"
+                [class.is-active]="previewMode()"
+                [attr.aria-selected]="previewMode()"
+                (click)="setPreview(true)"
+              >
+                {{ 'form.preview' | t }}
+              </button>
+            </div>
+          </div>
+
+          <div class="editor">
+            @if (!previewMode()) {
+              <div class="md-toolbar" role="toolbar" [attr.aria-label]="'form.formattingAria' | t">
+                <button
+                  type="button"
+                  class="md-btn"
+                  [title]="'form.bold' | t"
+                  [attr.aria-label]="'form.bold' | t"
+                  (click)="applyWrap('bold')"
+                >
+                  <strong>B</strong>
+                </button>
+                <button
+                  type="button"
+                  class="md-btn"
+                  [title]="'form.italic' | t"
+                  [attr.aria-label]="'form.italic' | t"
+                  (click)="applyWrap('italic')"
+                >
+                  <em>I</em>
+                </button>
+                <button
+                  type="button"
+                  class="md-btn"
+                  [title]="'form.heading' | t"
+                  [attr.aria-label]="'form.heading' | t"
+                  (click)="applyWrap('heading')"
+                >
+                  H
+                </button>
+                <button
+                  type="button"
+                  class="md-btn"
+                  [title]="'form.list' | t"
+                  [attr.aria-label]="'form.bulletedList' | t"
+                  (click)="applyWrap('list')"
+                >
+                  ☰
+                </button>
+                <button
+                  type="button"
+                  class="md-btn"
+                  [title]="'form.link' | t"
+                  [attr.aria-label]="'form.link' | t"
+                  (click)="applyWrap('link')"
+                >
+                  🔗
+                </button>
+                <button
+                  type="button"
+                  class="md-btn"
+                  [title]="'form.code' | t"
+                  [attr.aria-label]="'form.code' | t"
+                  (click)="applyWrap('code')"
+                >
+                  &lt;/&gt;
+                </button>
+              </div>
+              <textarea
+                #descArea
+                id="task-desc"
+                class="textarea editor__area"
+                rows="6"
+                [placeholder]="'form.descriptionPlaceholder' | t"
+                formControlName="description"
+              ></textarea>
+            } @else {
+              <div class="editor__preview prose">
+                @if (descriptionValue.trim()) {
+                  <div [innerHTML]="descriptionValue | markdown"></div>
+                } @else {
+                  <p class="preview-empty">{{ 'form.nothingToPreview' | t }}</p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Assignee -->
+        <div class="form-field side-field--prominent">
+          <label class="form-label" for="task-assignee">
+            {{ 'task.assignee' | t }}<span class="req" aria-hidden="true">*</span>
+          </label>
+          <select
+            id="task-assignee"
+            class="select"
+            formControlName="assigneeId"
+            [class.is-invalid]="invalid('assigneeId')"
+          >
+            <option value="" disabled>{{ 'form.selectWorker' | t }}</option>
+            @for (w of workers(); track w.id) {
+              <option [value]="w.id">{{ w.displayName }}</option>
+            }
+          </select>
+          @if (invalid('assigneeId')) {
+            <span class="field-error">{{ 'form.assigneeRequired' | t }}</span>
+          }
+        </div>
+
+        <!-- Deadline + Priority -->
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="task-deadline">
+              {{ 'task.deadline' | t }}<span class="req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="task-deadline"
+              class="input"
+              type="datetime-local"
+              formControlName="deadline"
+              [class.is-invalid]="invalid('deadline')"
+            />
+            @if (invalid('deadline')) {
+              <span class="field-error">{{ 'form.deadlineRequired' | t }}</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="task-priority">{{ 'task.priority' | t }}</label>
+            <select id="task-priority" class="select" formControlName="priority">
+              @for (p of priorityOptions; track p.priority) {
+                <option [ngValue]="p.priority">{{ priorityOptionLabel(p.priority) }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Icon picker -->
+        <div class="form-field">
+          <span class="form-label">{{ 'task.markerIcon' | t }}</span>
+          <div class="icon-picker">
+            <button
+              type="button"
+              class="icon-trigger"
+              [class.is-open]="iconOpen()"
+              aria-haspopup="true"
+              [attr.aria-expanded]="iconOpen()"
+              (click)="toggleIconPicker()"
+            >
+              <span class="icon-trigger__glyph">{{ resolvedIcon() }}</span>
+              <span class="icon-trigger__label">{{ 'form.changeIcon' | t }}</span>
+              <span class="icon-trigger__caret" aria-hidden="true">▾</span>
+            </button>
+
+            @if (iconOpen()) {
+              <div class="icon-pop" role="dialog" [attr.aria-label]="'form.chooseIconAria' | t">
+                @for (group of iconGroups; track group.labelKey) {
+                  <div class="icon-group">
+                    <p class="icon-group__label">{{ group.labelKey | t }}</p>
+                    <div class="icon-grid">
+                      @for (glyph of group.icons; track glyph) {
+                        <button
+                          type="button"
+                          class="icon-cell"
+                          [class.is-selected]="glyph === icon()"
+                          [attr.aria-label]="'form.useIconAria' | t: { glyph: glyph }"
+                          [attr.aria-pressed]="glyph === icon()"
+                          (click)="chooseIcon(glyph)"
+                        >
+                          {{ glyph }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Labels -->
+        <div class="form-field">
+          <label class="form-label" for="task-label">{{ 'task.labels' | t }}</label>
+          <div class="label-input">
+            @if (labels().length) {
+              <ul class="label-chips">
+                @for (label of labels(); track label) {
+                  <li class="label-chip">
+                    <span class="label-chip__text">{{ label }}</span>
+                    <button
+                      type="button"
+                      class="label-chip__x"
+                      [attr.aria-label]="'form.removeLabelAria' | t: { label: label }"
+                      (click)="removeLabel(label)"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            <input
+              id="task-label"
+              class="input label-field"
+              type="text"
+              [placeholder]="'form.labelPlaceholder' | t"
+              [value]="labelDraft()"
+              (input)="onLabelInput($any($event.target).value)"
+              (keydown.enter)="$event.preventDefault(); commitLabel()"
+              (keydown.backspace)="onLabelBackspace()"
+            />
+          </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="form-field">
+          <span class="form-label">{{ 'task.attachments' | t }}</span>
+
+          @if (attachmentError(); as attMsg) {
+            <div class="alert alert--error" role="alert">{{ attMsg }}</div>
+          }
+
+          <div
+            class="dropzone"
+            [class.is-dragging]="dragging()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+          >
+            <p class="dropzone__text">
+              {{ 'form.dropFilesPrefix' | t }}
+              <label class="dropzone__pick">
+                {{ 'form.browse' | t }}
+                <input type="file" multiple hidden (change)="onPick($event)" />
+              </label>
+            </p>
+            <p class="dropzone__hint">{{ 'form.maxFileSize' | t }}</p>
+            @if (uploading()) {
+              <p class="dropzone__hint">{{ 'form.uploading' | t }}</p>
+            }
+          </div>
+
+          <!-- Existing (edit) image thumbnails -->
+          @if (existing().length || staged().length) {
+            <div class="attach-grid">
+              @for (att of existing(); track att.id) {
+                @if (att.isImage) {
+                  <div class="thumb">
+                    <app-auth-image class="thumb__img" [src]="att.url" [alt]="att.fileName" />
+                    <button
+                      type="button"
+                      class="thumb__remove"
+                      [title]="'common.remove' | t"
+                      [attr.aria-label]="'form.removeFileAria' | t: { name: att.fileName }"
+                      (click)="deleteExisting(att)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+              }
+              @for (s of staged(); track s.id) {
+                @if (s.isImage && s.previewUrl) {
+                  <div class="thumb">
+                    <img class="thumb__img" [src]="s.previewUrl" [alt]="s.file.name" />
+                    <button
+                      type="button"
+                      class="thumb__remove"
+                      [title]="'common.remove' | t"
+                      [attr.aria-label]="'form.removeFileAria' | t: { name: s.file.name }"
+                      (click)="removeStaged(s.id)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          }
+
+          <!-- Non-image file chips -->
+          @if (existing().length || staged().length) {
+            <ul class="file-chips">
+              @for (att of existing(); track att.id) {
+                @if (!att.isImage) {
+                  <li class="file-chip">
+                    <span class="file-chip__icon" aria-hidden="true">📄</span>
+                    <span class="file-chip__name" [title]="att.fileName">{{ att.fileName }}</span>
+                    <span class="file-chip__size">{{ formatSize(att.sizeBytes) }}</span>
+                    <button
+                      type="button"
+                      class="file-chip__x"
+                      [attr.aria-label]="'form.removeFileAria' | t: { name: att.fileName }"
+                      (click)="deleteExisting(att)"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                }
+              }
+              @for (s of staged(); track s.id) {
+                @if (!s.isImage) {
+                  <li class="file-chip">
+                    <span class="file-chip__icon" aria-hidden="true">📄</span>
+                    <span class="file-chip__name" [title]="s.file.name">{{ s.file.name }}</span>
+                    <span class="file-chip__size">{{ formatSize(s.file.size) }}</span>
+                    <button
+                      type="button"
+                      class="file-chip__x"
+                      [attr.aria-label]="'form.removeFileAria' | t: { name: s.file.name }"
+                      (click)="removeStaged(s.id)"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                }
+              }
+            </ul>
+          }
+        </div>
+      </aside>
+    </form>
+  }
+</div>
